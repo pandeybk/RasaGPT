@@ -5,6 +5,7 @@ from sqlalchemy import Column
 from datetime import datetime
 from util import snake_case
 import uuid as uuid_pkg
+from sqlalchemy import text 
 
 from sqlmodel import (
     UniqueConstraint,
@@ -592,7 +593,9 @@ def create_db():
 def create_user_permissions():
     session = Session(get_engine(dsn=SU_DSN))
     # grant access to entire database and all tables to user DB_USER
-    query = f"GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO {DB_USER};"
+    # query = "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO {DB_USER};"
+    # session.execute(text(query))
+    query = text(f"GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO {DB_USER};")
     session.execute(query)
     session.commit()
     session.close()
@@ -609,14 +612,14 @@ def create_vector_index():
     if PGVECTOR_ADD_INDEX is True:
         session = Session(get_engine(dsn=SU_DSN))
         for strategy in DISTANCE_STRATEGIES:
-            session.execute(strategy[3])
+            session.execute(text(strategy[3]))
             session.commit()
 
 
 def enable_vector():
     session = Session(get_engine(dsn=SU_DSN))
     query = "CREATE EXTENSION IF NOT EXISTS vector;"
-    session.execute(query)
+    session.execute(text(query))
     session.commit()
     add_vector_distance_fn(session)
     session.close()
@@ -651,7 +654,7 @@ begin
 end;
 $$;"""
 
-        session.execute(query)
+        session.execute(text(query))
         session.commit()
     session.close()
 

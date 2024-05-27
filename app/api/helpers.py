@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from uuid import UUID
 import os
+from sqlalchemy import cast, String
 
 from typing import (
     Optional,
@@ -92,7 +93,9 @@ def create_org_by_org_or_uuid(
     )
 
     if o:
-        raise HTTPException(status_code=404, detail="Organization already exists")
+        logger.info("Organization already exists, continuing...")
+        return o
+        # raise HTTPException(status_code=404, detail="Organization already exists")
 
     if isinstance(organization, OrganizationCreate) or isinstance(organization, str):
         organization = organization or OrganizationCreate(
@@ -506,7 +509,7 @@ def get_document_by_name(
             select(Document).where(
                 Document.project == project,
                 Document.display_name == file_name,
-                Document.status == ENTITY_STATUS.ACTIVE.value,
+                cast(Document.status, String) == str(ENTITY_STATUS.ACTIVE.value),
             )
         ).first()
     else:
@@ -515,7 +518,7 @@ def get_document_by_name(
                 select(Document).where(
                     Document.project == project,
                     Document.display_name == file_name,
-                    Document.status == ENTITY_STATUS.ACTIVE.value,
+                    cast(Document.status, String) == str(ENTITY_STATUS.ACTIVE.value),
                 )
             ).first()
 
